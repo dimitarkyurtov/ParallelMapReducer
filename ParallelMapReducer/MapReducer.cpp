@@ -246,10 +246,11 @@ void MapReducer::parallelMapReduce()
         mapWorkers.push_back(std::thread([this, c] {this->mapThread(c); }));
     }
 
-
+    
     for (int c = 0; c < this->numThreads; c++) {
         mapWorkers[c].join();
     }
+    
 
     this->currentTask = 0;
 

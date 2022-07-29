@@ -45,38 +45,18 @@ int main()
     std::vector<std::string> fileNames2 = { "data3-long.txt", "data4-long.txt"}; //25 000KB
     int numThreads;
     cin >> numThreads;
-    MapReducerImpl* mr = new MapReducerImpl(fileNames, 100, 5, numThreads);
+    MapReducerImpl* mr = new MapReducerImpl(fileNames2, 1000000, 200, numThreads);
     mr->readFromFile();
 
     auto start = high_resolution_clock::now();
     mr->parallelMapReduce();
     auto stop = high_resolution_clock::now();
    
-/*
-    for (size_t i = 0; i < mr->numThreads; i++)
-    {
-        for (auto val : mr->mappedKeyValuesFinalPerThread[i])
-        {
-            std::cout << "key: " + val.first << " value: " + val.second << std::endl;
-        }
-    }
-    */
     auto duration = duration_cast<milliseconds>(stop - start);
 
     cout << "Time taken by function: "
         << duration.count() << " milliseconds" << endl;
 
     mr->printResult();
-    /*
-    std::string line;
-    std::ifstream myfile ("data/data.txt");
-    if (myfile.is_open())
-    {
-        while ( getline (myfile,line) )
-        {
-            cout << line.length() << endl;
-        }
-        myfile.close();
-    }*/
     return 0;
 }

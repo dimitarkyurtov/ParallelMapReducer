@@ -54,6 +54,7 @@ public:
     void mapThread(int);
     void reduceThread(int);
     int nextTask(const int &limit);
+    int nextTask2(const int& limit);
 };
 
 #endif // MAPREDUCER_H
