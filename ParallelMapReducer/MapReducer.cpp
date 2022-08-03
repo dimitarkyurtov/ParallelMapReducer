@@ -4,92 +4,19 @@
 #include <thread>
 #include <algorithm>
 
-
-MapReducer::MapReducer(const MapReducer& mr)
-{
-    this->fileNames = mr.fileNames;
-    this->sizePerBlock = mr.sizePerBlock;
-    this->R = mr.R;
-    this->mappedKeyValuesFinal = new std::pair<std::string, std::string>[this->R];
-    this->numThreads = mr.numThreads;
-    this->mappedKeyValuesFinalPerThread = new std::vector<std::pair<std::string, std::string>>[this->numThreads];
-    this->mappedKeyValuesPerThread = new std::vector<std::pair<std::string, std::string>>*[this->numThreads];
-    for (size_t i = 0; i < this->numThreads; i++)
-    {
-        this->mappedKeyValuesPerThread[i] = new std::vector<std::pair<std::string, std::string>>[this->R];
-        for (size_t j = 0; j < this->R; ++j)
-        {
-            this->mappedKeyValuesPerThread[i][j] = mr.mappedKeyValuesPerThread[i][j];
-        }
-    }
-    this->mappedKeyValues = new std::vector<std::pair<std::string, std::string>>[mr.R];
-    this->mappedKeyValuesMutexes = new std::mutex[numMutexes];
-    for (size_t i = 0; i < this->R; ++i)
-    {
-        this->mappedKeyValues[i] = mr.mappedKeyValues[i];
-    }
-}
-
-MapReducer& MapReducer::operator=(const MapReducer& mr)
-{
-    if(this == &mr)
-    {
-        return *this;
-    }
-    else
-    {
-        delete[] mappedKeyValues;
-        delete[] mappedKeyValuesMutexes;
-        delete[] mappedKeyValuesFinal;
-        delete[] mappedKeyValuesFinalPerThread;
-        for (size_t i = 0; i < this->numThreads; i++)
-        {
-            delete[] this->mappedKeyValuesPerThread[i];
-            
-        }
-        delete[] this->mappedKeyValuesPerThread;
-        this->fileNames = mr.fileNames;
-        this->sizePerBlock = mr.sizePerBlock;
-        this->R = mr.R;
-        this->mappedKeyValuesFinal = new std::pair<std::string, std::string>[this->R];
-        this->numThreads = mr.numThreads;
-        this->mappedKeyValuesFinalPerThread = new std::vector<std::pair<std::string, std::string>>[this->numThreads];
-        this->mappedKeyValuesPerThread = new std::vector<std::pair<std::string, std::string>>*[this->numThreads];
-        for (size_t i = 0; i < this->numThreads; i++)
-        {
-            this->mappedKeyValuesPerThread[i] = new std::vector<std::pair<std::string, std::string>>[this->R];
-            for (size_t j = 0; j < this->R; ++j)
-            {
-                this->mappedKeyValuesPerThread[i][j] = mr.mappedKeyValuesPerThread[i][j];
-            }
-        }
-        this->mappedKeyValues = new std::vector<std::pair<std::string, std::string>>[mr.R];
-        this->mappedKeyValuesMutexes = new std::mutex[numMutexes];
-        for (size_t i = 0; i < this->R; ++i)
-        {
-            this->mappedKeyValues[i] = mr.mappedKeyValues[i];
-        }
-
-        return *this;
-    }
-}
-
-
 MapReducer::MapReducer(const std::vector<std::string>& fileNames, const unsigned int& blockSize = l1_cache_size, const unsigned int& reduceTasks = 0, const int &nT = 1)
 {
     this->fileNames = fileNames;
     this->sizePerBlock = blockSize;
     this->R = reduceTasks;
     this->numThreads = nT;
-    this->mappedKeyValuesFinalPerThread = new std::vector<std::pair<std::string, std::string>>[this->numThreads];
-    this->mappedKeyValuesPerThread = new std::vector<std::pair<std::string, std::string>>*[this->numThreads];
+    this->mappedKeyValuesFinalPerThread = std::vector<std::vector<KeyValuePair>>(this->numThreads);
+    this->mappedKeyValuesPerThread = std::vector<std::vector<std::vector<KeyValuePair>>>(this->numThreads);
     for (size_t i = 0; i < this->numThreads; i++)
     {
-        this->mappedKeyValuesPerThread[i] = new std::vector<std::pair<std::string, std::string>>[this->R];
+        this->mappedKeyValuesPerThread[i] = std::vector<std::vector<KeyValuePair>>(this->R);
     }
-    this->mappedKeyValues = new std::vector<std::pair<std::string, std::string>>[this->R];
-    this->mappedKeyValuesFinal = new std::pair<std::string, std::string>[this->R];
-    this->mappedKeyValuesMutexes = new std::mutex[numMutexes];
+    //this->mappedKeyValuesMutexes.reserve(numMutexes);
 }
 
 void MapReducer::readFromFile()
@@ -106,7 +33,7 @@ void MapReducer::readFromFile()
             {
                 if (currentTaskSize + line.length() > this->sizePerBlock)
                 {
-                    this->mapTasks.push_back(std::make_pair(currentTask, DEAD));
+                    this->mapTasks.push_back(currentTask);
                     currentTask.clear();
                     currentTaskSize = 0;
                 }
@@ -118,7 +45,7 @@ void MapReducer::readFromFile()
     }
     if (currentTask.size() > 0)
     {
-        this->mapTasks.push_back(std::make_pair(currentTask, DEAD));
+        this->mapTasks.push_back(currentTask);
     }
 
     this->M = this->mapTasks.size();
@@ -139,7 +66,7 @@ void MapReducer::Emit(const std::string& key, const std::string& value, const in
     int reducerIdx = this->hash_str(key) % this->R;
     {
         //const std::lock_guard<std::mutex> lock(this->mappedKeyValuesMutexes[this->hash_mutex_addr(&this->mappedKeyValues[reducerIdx]) % numMutexes]);
-        this->mappedKeyValuesPerThread[threadIdx][reducerIdx].push_back(std::make_pair(key, value));
+        this->mappedKeyValuesPerThread[threadIdx][reducerIdx].push_back(KeyValuePair(key, value));
     }
 }
 
@@ -147,18 +74,17 @@ void MapReducer::Emit2(const std::string& key, const std::string& value, const i
 {
     {
         //const std::lock_guard<std::mutex> lock(this->reduceMutex);
-        this->mappedKeyValuesFinalPerThread[threadIdx].push_back( std::make_pair(key, value));
+        this->mappedKeyValuesFinalPerThread[threadIdx].push_back( KeyValuePair(key, value));
     }
 }
 
 void MapReducer::mapThread(int threadIdx)
 {
     int currentTaskIdx = this->nextTask(this->M);
-    std::vector<std::string> currentTask;
+    std::vector<std::string>& currentTask = this->mapTasks[currentTaskIdx];
     while (currentTaskIdx != -1)
     {
-        currentTask = this->mapTasks[currentTaskIdx].first;
-        this->mapTasks[currentTaskIdx].second = PENDING;
+        currentTask = this->mapTasks[currentTaskIdx];
         for (auto& line : currentTask)
         {
             //std::cout << "Map function started" << std::endl;
@@ -166,7 +92,6 @@ void MapReducer::mapThread(int threadIdx)
             this->mapFunction(line, threadIdx);
             //std::cout << "Map function ended" << std::endl;
         }
-        this->mapTasks[currentTaskIdx].second = COMPLETED;
         currentTaskIdx = this->nextTask(this->M);
         //std::cout << currentTaskIdx << std::endl;
     }
@@ -175,8 +100,8 @@ void MapReducer::mapThread(int threadIdx)
 void MapReducer::reduceThread(int threadIdx)
 {
     int currentTaskIdx = this->nextTask(this->R);           
-    std::vector<std::pair<std::string, std::string>> currentTask;
-    std::vector<std::pair<std::string, std::vector<std::string>>> modifiedTask;
+    std::vector<KeyValuePair> currentTask;
+    std::vector<KeyMultipleValuePair> modifiedTask;
     while (currentTaskIdx != -1)
     {
         for (size_t i = 0; i < this->numThreads; i++)
@@ -198,25 +123,25 @@ void MapReducer::reduceThread(int threadIdx)
         std::vector<std::string> currentValues;
         if (currentTask.size() > 0)
         {
-            lastKey = currentTask[0].first;
+            lastKey = currentTask[0].key;
         }
         for (auto& keyValuePair : currentTask)
         {
-            if (keyValuePair.first == lastKey)
+            if (keyValuePair.key == lastKey)
             {
-                currentValues.push_back(keyValuePair.second);
+                currentValues.push_back(keyValuePair.value);
             }
             else
             {
-                modifiedTask.push_back(std::make_pair(lastKey, currentValues));
+                modifiedTask.push_back(KeyMultipleValuePair(lastKey, currentValues));
                 currentValues.clear();
-                lastKey = keyValuePair.first;
-                currentValues.push_back(keyValuePair.second);
+                lastKey = keyValuePair.key;
+                currentValues.push_back(keyValuePair.value);
             }
         }
         if (currentValues.size() > 0)
         {
-            modifiedTask.push_back(std::make_pair(lastKey, currentValues));
+            modifiedTask.push_back(KeyMultipleValuePair(lastKey, currentValues));
             currentValues.clear();
         }
 
@@ -251,6 +176,7 @@ void MapReducer::parallelMapReduce()
         mapWorkers[c].join();
     }
     
+    
 
     this->currentTask = 0;
 
@@ -263,6 +189,7 @@ void MapReducer::parallelMapReduce()
     for (int c = 0; c < this->numThreads; c++) {
         reduceWorkers[c].join();
     }
+    
 }
 
 
@@ -286,21 +213,8 @@ void MapReducer::printResult() const
     {
         for (auto val : this->mappedKeyValuesFinalPerThread[i])
         {
-            std::cout << "key: " + val.first << " value: " + val.second << std::endl;
+            std::cout << "key: " + val.key << " value: " + val.value << std::endl;
         }
     }
 }
 
-MapReducer::~MapReducer()
-{
-    delete[] this->mappedKeyValues;
-    delete[] this->mappedKeyValuesMutexes;
-    delete[] mappedKeyValuesFinal;
-    delete[] mappedKeyValuesFinalPerThread;
-    for (size_t i = 0; i < this->numThreads; i++)
-    {
-        delete[] this->mappedKeyValuesPerThread[i];
-
-    }
-    delete[] this->mappedKeyValuesPerThread;
-}

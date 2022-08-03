@@ -1,0 +1,8 @@
+﻿  ParallelMapReducer.cpp
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\ParallelMapReducer.cpp(45,9): warning C4101: 'b': unreferenced local variable
+  Generating code
+  1 of 418 functions ( 0.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  ParallelMapReducer.vcxproj -> C:\Users\GamingPC\source\repos\ParallelMapReducer\x64\Release\ParallelMapReducer.exe

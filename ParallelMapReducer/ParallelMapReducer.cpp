@@ -1,62 +1,33 @@
 #include <iostream>
 #include <string>
 #include <chrono>
-#include <fstream>
-#include "MapReducer.h"
+#include <vector>
+#include "lib.h"
+#include "Mapper.h"
 
-using namespace std;
+
 using namespace std::chrono;
 
-class MapReducerImpl : public MapReducer {
-    using MapReducer::MapReducer;
-public:
-    void mapFunction(std::string line, const int& threadIdx)
-    {
-        const int n = line.length();
-        for (size_t i = 0; i < n; ++i)
-        {
-            while ((i < n) && line[i] == ' ')
-                i++;
-
-            int start = i;
-            while ((i < n) && line[i] != ' ')
-                i++;
-
-            if (start < i)
-                this->Emit(line.substr(start, i - start), "1", threadIdx);
-        }
-    }
-
-    virtual void reduceFunction(std::pair<std::string, std::vector<std::string>> keyValues, const int& threadIdx) {
-        int sum = 0;
-        for (auto& value : keyValues.second)
-        {
-            sum += std::stoi(value);
-        }
-        this->Emit2(keyValues.first, std::to_string(sum), threadIdx);
-    }
-
-};
 
 int main()
 {
     
-    std::vector<std::string> fileNames = { "data.txt", "data2.txt" };
+    std::vector<std::string> inputFileNames = {"data.txt"};
+    std::vector<std::string> outputFileNames = { "out_data.txt" };
     std::vector<std::string> fileNames2 = { "data3-long.txt", "data4-long.txt"}; //25 000KB
-    int numThreads;
-    cin >> numThreads;
-    MapReducerImpl* mr = new MapReducerImpl(fileNames2, 1000000, 200, numThreads);
-    mr->readFromFile();
+
+    MapReduceInput input(inputFileNames);
+    MapReduceOutput output(outputFileNames);
+    MapReduceSpecification spec(100, 3, 3, input, output);
+
+    MapReduce(spec);
 
     auto start = high_resolution_clock::now();
-    mr->parallelMapReduce();
     auto stop = high_resolution_clock::now();
    
     auto duration = duration_cast<milliseconds>(stop - start);
 
-    cout << "Time taken by function: "
-        << duration.count() << " milliseconds" << endl;
-
-    mr->printResult();
+    std::cout << "Time taken by function: "
+        << duration.count() << " milliseconds" << std::endl;
     return 0;
 }

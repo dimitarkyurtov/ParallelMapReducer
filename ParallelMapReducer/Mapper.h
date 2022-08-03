@@ -1,0 +1,28 @@
+#pragma once
+#include <string>
+#include <vector>
+#include <iostream>
+
+struct KeyValuePair {
+    std::string key;
+    std::string value;
+    KeyValuePair(std::string k, std::string v) : key(k), value(v) {}
+
+    bool operator < (const KeyValuePair& str) const
+    {
+        return (key < str.key);
+    }
+};
+
+class Mapper
+{
+public:
+    Mapper(const unsigned&);
+    unsigned int R;
+    std::vector<std::vector<KeyValuePair>> mappedKeyValues;
+    std::hash<std::string> hash_str;
+	virtual void Map(const std::string& line) = 0;
+    void Emit(const std::string&, const std::string&);
+    void print(std::ostream&) const;
+};
+

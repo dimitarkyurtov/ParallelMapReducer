@@ -12,23 +12,35 @@ typedef void (*ReduceFunction)(std::string, std::vector<std::string>);
 const unsigned int l1_cache_size = 256;
 const int numMutexes = 1000;
 
-enum Status { DEAD, PENDING, COMPLETED };
+struct KeyValuePair{
+    std::string key;
+    std::string value;
+    KeyValuePair(std::string k, std::string v) : key(k), value(v){}
+
+    bool operator < (const KeyValuePair& str) const
+    {
+        return (key < str.key);
+    }
+};
+
+struct KeyMultipleValuePair {
+    std::string key;
+    std::vector<std::string> values;
+    KeyMultipleValuePair(std::string k, std::vector<std::string> v) : key(k), values(v) {}
+};
 
 class MapReducer
 {
 public:
-    MapReducer();
     MapReducer(const std::vector<std::string>&, const unsigned int&, const unsigned int&, const int &);
-    MapReducer(const MapReducer& mr);
-    MapReducer& operator=(const MapReducer& mr);
+
     void parallelMapReduce();
     void readFromFile();
     void Emit(const std::string& key, const std::string& value, const int &threadIdx);
     void Emit2(const std::string& key, const std::string& value, const int& threadIdx);
     void printResult() const;
-    virtual void mapFunction(std::string line, const int &threadIdx) = 0;
-    virtual void reduceFunction(std::pair<std::string, std::vector<std::string>>, const int& threadIdx) = 0;
-    ~MapReducer();
+    virtual void mapFunction(const std::string& line, const int &threadIdx) = 0;
+    virtual void reduceFunction(const KeyMultipleValuePair&, const int& threadIdx) = 0;
 
 //protected:
 
@@ -41,20 +53,14 @@ public:
     int currentTask;
     int numThreads;
     std::hash<std::string> hash_str;
-    std::hash<std::vector<std::pair<std::string, std::string>>*> hash_mutex_addr;
     std::mutex taskMutex;
     std::mutex reduceMutex;
-    std::mutex* mappedKeyValuesMutexes;
-    std::vector<std::pair<std::vector<std::string>, Status>> mapTasks;
-    std::vector<std::pair<std::string, std::string>>* mappedKeyValues;
-    std::vector<std::pair<std::string, std::string>>** mappedKeyValuesPerThread;
-    std::pair<std::string, std::string>* mappedKeyValuesFinal;
-    std::vector<std::pair<std::string, std::string>>* mappedKeyValuesFinalPerThread;
-    std::unordered_map<std::string, std::string> reducedKeyValues;
+    std::vector<std::vector<std::string>> mapTasks;
+    std::vector<std::vector<std::vector<KeyValuePair>>> mappedKeyValuesPerThread;
+    std::vector<std::vector<KeyValuePair>> mappedKeyValuesFinalPerThread;
     void mapThread(int);
     void reduceThread(int);
     int nextTask(const int &limit);
-    int nextTask2(const int& limit);
 };
 
 #endif // MAPREDUCER_H
