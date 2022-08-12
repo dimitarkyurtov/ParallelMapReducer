@@ -127,21 +127,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="lib.cpp" />
-    <ClCompile Include="Mapper.cpp" />
-    <ClCompile Include="MapReduceInput.cpp" />
-    <ClCompile Include="MapReduceOutput.cpp" />
     <ClCompile Include="MapReducer.cpp" />
-    <ClCompile Include="MapReduceSpecification.cpp" />
     <ClCompile Include="ParallelMapReducer.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="lib.h" />
-    <ClInclude Include="Mapper.h" />
-    <ClInclude Include="MapReduceInput.h" />
-    <ClInclude Include="MapReduceOutput.h" />
     <ClInclude Include="MapReducer.h" />
-    <ClInclude Include="MapReduceSpecification.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

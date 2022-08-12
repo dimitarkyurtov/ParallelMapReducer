@@ -75,6 +75,72 @@ void mapWorker(int threadIdx, const unsigned& R, std::ostream& stream)
     }
 }
 
+
+/*
+void reduceWorker(int threadIdx)
+{
+    int currentTaskIdx = this->nextTask(this->R);
+    std::vector<KeyValuePair> currentTask;
+    std::vector<KeyMultipleValuePair> modifiedTask;
+    while (currentTaskIdx != -1)
+    {
+        for (size_t i = 0; i < this->numThreads; i++)
+        {
+            currentTask.insert(currentTask.end(),
+                this->mappedKeyValuesPerThread[i][currentTaskIdx].begin(),
+                this->mappedKeyValuesPerThread[i][currentTaskIdx].end());
+        }
+        for (auto task : currentTask)
+        {
+            std::cout << "key: " + task.first << " value: " + task.second << std::endl;
+        }
+        std::sort(currentTask.begin(), currentTask.end());
+
+
+        std::string lastKey;
+        std::vector<std::string> currentValues;
+        if (currentTask.size() > 0)
+        {
+            lastKey = currentTask[0].key;
+        }
+        for (auto& keyValuePair : currentTask)
+        {
+            if (keyValuePair.key == lastKey)
+            {
+                currentValues.push_back(keyValuePair.value);
+            }
+            else
+            {
+                modifiedTask.push_back(KeyMultipleValuePair(lastKey, currentValues));
+                currentValues.clear();
+                lastKey = keyValuePair.key;
+                currentValues.push_back(keyValuePair.value);
+            }
+        }
+        if (currentValues.size() > 0)
+        {
+            modifiedTask.push_back(KeyMultipleValuePair(lastKey, currentValues));
+            currentValues.clear();
+        }
+
+
+        for (auto& keyValues : modifiedTask)
+        {
+            //std::cout << "Map function started" << std::endl;
+            //std::cout << line << std::endl;
+            this->reduceFunction(keyValues, threadIdx);
+            //std::cout << "Map function ended" << std::endl;
+        }
+        currentTaskIdx = this->nextTask(this->R);
+        currentValues.clear();
+        currentTask.clear();
+
+        modifiedTask.clear();
+        //std::cout << currentTaskIdx << std::endl;
+    }
+}
+*/
+
 void MapReduce(MapReduceSpecification& spec)
 {
     std::ofstream outputFile("data/" + spec.outputs.fileNames[0]);
@@ -126,5 +192,10 @@ void MapReduce(MapReduceSpecification& spec)
 
     for (int c = 0; c < spec.numThreads; c++) {
         mapWorkers[c].join();
+    }
+
+    std::vector<std::thread> reducerWorker;
+    for (int c = 0; c < spec.numThreads; c++) {
+        mapWorkers.push_back(std::thread([c, &spec, &outputFile] {mapWorker(c, spec.R, outputFile); }));
     }
 }

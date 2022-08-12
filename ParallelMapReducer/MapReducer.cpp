@@ -3,6 +3,9 @@
 #include <iostream>
 #include <thread>
 #include <algorithm>
+#include <stdlib.h>
+#include <time.h> 
+using namespace std::chrono;
 
 MapReducer::MapReducer(const std::vector<std::string>& fileNames, const unsigned int& blockSize = l1_cache_size, const unsigned int& reduceTasks = 0, const int &nT = 1)
 {
@@ -12,6 +15,7 @@ MapReducer::MapReducer(const std::vector<std::string>& fileNames, const unsigned
     this->numThreads = nT;
     this->mappedKeyValuesFinalPerThread = std::vector<std::vector<KeyValuePair>>(this->numThreads);
     this->mappedKeyValuesPerThread = std::vector<std::vector<std::vector<KeyValuePair>>>(this->numThreads);
+    this->hasMapWork = true;
     for (size_t i = 0; i < this->numThreads; i++)
     {
         this->mappedKeyValuesPerThread[i] = std::vector<std::vector<KeyValuePair>>(this->R);
@@ -19,47 +23,7 @@ MapReducer::MapReducer(const std::vector<std::string>& fileNames, const unsigned
     //this->mappedKeyValuesMutexes.reserve(numMutexes);
 }
 
-void MapReducer::readFromFile()
-{
-    unsigned int currentTaskSize = 0;
-    std::vector<std::string> currentTask;
-    std::string line;
-    for (const std::string& fileName : this->fileNames)
-    {
-        std::ifstream myfile("data/" + fileName);
-        if (myfile.is_open())
-        {
-            while (getline(myfile, line))
-            {
-                if (currentTaskSize + line.length() > this->sizePerBlock)
-                {
-                    this->mapTasks.push_back(currentTask);
-                    currentTask.clear();
-                    currentTaskSize = 0;
-                }
-                currentTask.push_back(line);
-                currentTaskSize += line.length();
-            }
-            myfile.close();
-        }
-    }
-    if (currentTask.size() > 0)
-    {
-        this->mapTasks.push_back(currentTask);
-    }
 
-    this->M = this->mapTasks.size();
-    this->currentTask = 0;
-
-    /*
-    for(auto task : this->mapTasks)
-    {
-        std::cout << "Task has started" << std::endl;
-        std::cout << task.first.size() << std::endl;
-        std::cout << "Task has ended" << std::endl;
-    }
-    */
-}
 
 void MapReducer::Emit(const std::string& key, const std::string& value, const int& threadIdx)
 {
@@ -78,23 +42,81 @@ void MapReducer::Emit2(const std::string& key, const std::string& value, const i
     }
 }
 
-void MapReducer::mapThread(int threadIdx)
+void MapReducer::mapThread(int threadIdx, std::queue<std::vector<std::string>>& mapTaskQueue)
 {
-    int currentTaskIdx = this->nextTask(this->M);
-    std::vector<std::string>& currentTask = this->mapTasks[currentTaskIdx];
-    while (currentTaskIdx != -1)
+    std::vector<std::vector<KeyValuePair2>> mappedKeyValuesLocalPerThread;
+    mappedKeyValuesLocalPerThread = std::vector<std::vector<KeyValuePair2>>(this->R);
+    std::vector<std::string> currentTask;
+    bool breaker = false;
+    int iter = 1;
+    while (true)
     {
-        currentTask = this->mapTasks[currentTaskIdx];
+        if (iter % 10 == 0)
+        {
+            int a = 3;
+        }
+        {
+            std::unique_lock<std::mutex> lk(mapQueueMutex);
+            this->cv.wait(
+                lk,
+                [this, &mapTaskQueue] {
+                    return !mapTaskQueue.empty() || (mapTaskQueue.empty() && !hasMapWork);
+                }
+            );
+
+            breaker = mapTaskQueue.empty();
+
+            if (!breaker)
+            {
+                currentTask = mapTaskQueue.front();
+                mapTaskQueue.pop();
+            }
+        }
+
+        if (breaker)
+        {
+            break;
+        }
+
+
         for (auto& line : currentTask)
         {
-            //std::cout << "Map function started" << std::endl;
-            //std::cout << line << std::endl;
-            this->mapFunction(line, threadIdx);
-            //std::cout << "Map function ended" << std::endl;
+            //this->mapFunction(line, threadIdx);
+            const int n = line.size();
+            for (int i = 0; i < n; ) {
+                // Skip past leading whitespace
+                while ((i < n) && isspace(line[i]))
+                    i++;
+                // Find word end
+                int start = i;
+                while ((i < n) && !isspace(line[i]))
+                    i++;
+                if (start < i)
+                {
+                    int reducerIdx = this->hash_str(line.substr(start, i - start)) % this->R;
+                    {
+                        //const std::lock_guard<std::mutex> lock(this->mappedKeyValuesMutexes[this->hash_mutex_addr(&this->mappedKeyValues[reducerIdx]) % numMutexes]);
+                        mappedKeyValuesLocalPerThread[reducerIdx].push_back(KeyValuePair2(line.substr(start, i - start), "1"));
+                    }
+                }
+                    //Emit(line.substr(start, i - start), "1", threadIdx);
+            }
         }
-        currentTaskIdx = this->nextTask(this->M);
-        //std::cout << currentTaskIdx << std::endl;
+        iter++;
     }
+
+    int size = 0;
+    for (auto& el : mappedKeyValuesLocalPerThread)
+    {
+        size += el.size();
+    }
+    std::cout << size;
+    /*
+    {
+        std::lock_guard<std::mutex> writerLock(streamMutex);
+        m.print(stream);
+    }
+    */
 }
 
 void MapReducer::reduceThread(int threadIdx)
@@ -162,22 +184,77 @@ void MapReducer::reduceThread(int threadIdx)
     }
 }
 
-
-
-void MapReducer::parallelMapReduce() 
+void MapReducer::read()
 {
-    std::vector<std::thread> mapWorkers;
-    for (int c = 0; c < this->numThreads; c++) {
-        mapWorkers.push_back(std::thread([this, c] {this->mapThread(c); }));
+    std::queue<std::vector<std::string>> mapTaskQueue;
+   
+    
+
+    unsigned int currentTaskSize = 0;
+    std::vector<std::string> currentTask;
+    std::string line;
+    for (const std::string& fileName : this->fileNames)
+    {
+        std::ifstream myfile("data/" + fileName);
+        if (myfile.is_open())
+        {
+            while (getline(myfile, line))
+            {
+                if (currentTaskSize + line.length() > this->sizePerBlock)
+                {
+                    {
+                        std::lock_guard<std::mutex> writerLock(mapQueueMutex);
+                        mapTaskQueue.push(currentTask);
+                    }
+                    this->cv.notify_one();
+                    currentTask.clear();
+                    currentTaskSize = 0;
+                }
+                currentTask.push_back(line);
+                currentTaskSize += line.length();
+            }
+            myfile.close();
+        }
+    }
+    if (currentTask.size() > 0)
+    {
+        {
+            std::lock_guard<std::mutex> writerLock(mapQueueMutex);
+            mapTaskQueue.push(currentTask);
+        }
+        this->cv.notify_one();
     }
 
+    {
+        std::lock_guard<std::mutex> writerLock(mapQueueMutex);
+        this->hasMapWork = false;
+    }
+    this->cv.notify_all();
+
+
+
+    std::vector<std::thread> mapWorkers;
+    for (int c = 0; c < this->numThreads; c++) {
+        mapWorkers.push_back(std::thread([this, &mapTaskQueue, c] {this->mapThread(c, mapTaskQueue); }));
+    }
     
     for (int c = 0; c < this->numThreads; c++) {
         mapWorkers[c].join();
     }
     
+}
+
+void MapReducer::parallelMapReduce() 
+{
+    
     
 
+
+    read();
+
+    int a = 3;
+    
+    /*
     this->currentTask = 0;
 
     std::vector<std::thread> reduceWorkers;
@@ -189,7 +266,7 @@ void MapReducer::parallelMapReduce()
     for (int c = 0; c < this->numThreads; c++) {
         reduceWorkers[c].join();
     }
-    
+    */
 }
 
 
@@ -209,11 +286,13 @@ int MapReducer::nextTask(const int &limit)
 
 void MapReducer::printResult() const
 {
+
+    std::ofstream outputFile("data/out_data.txt");
     for (size_t i = 0; i < this->numThreads; i++)
     {
         for (auto val : this->mappedKeyValuesFinalPerThread[i])
         {
-            std::cout << "key: " + val.key << " value: " + val.value << std::endl;
+            outputFile << "key: " + val.key << " value: " + val.value << '\n';
         }
     }
 }

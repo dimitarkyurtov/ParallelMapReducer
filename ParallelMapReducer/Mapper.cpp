@@ -1,22 +1,27 @@
 #include "Mapper.h"
 
-Mapper::Mapper(const unsigned& R)
+Mapper::Mapper(const unsigned& numThrread, const unsigned& R)
 {
     this->R = R;
-	this->mappedKeyValues = std::vector<std::vector<KeyValuePair>>(R);
-}
-
-void Mapper::Emit(const std::string& key, const std::string& value)
-{
-    int reducerIdx = this->hash_str(key) % this->R;
+    this->numThread = numThread;
+	this->mappedKeyValues = std::vector<std::vector<std::vector<KeyValuePair>>>(this->numThread);
+    for (size_t i = 0; i < numThread; i++)
     {
-        this->mappedKeyValues[reducerIdx].push_back(KeyValuePair(key, value));
+        mappedKeyValues[i] = std::vector<std::vector<KeyValuePair>>(this->R);
     }
 }
 
-void Mapper::print(std::ostream& out = std::cout) const
+void Mapper::Emit(const std::string& key, const std::string& value, const unsigned& threadIdx)
 {
-    for (const auto& region : this->mappedKeyValues)
+    int reducerIdx = this->hash_str(key) % this->R;
+    {
+        this->mappedKeyValues[threadIdx][reducerIdx].push_back(KeyValuePair(key, value));
+    }
+}
+
+void Mapper::print(std::ostream& out = std::cout, const unsigned& threadIdx = 0) const
+{
+    for (const auto& region : this->mappedKeyValues[threadIdx])
     {
         for (const auto& pair : region)
         {

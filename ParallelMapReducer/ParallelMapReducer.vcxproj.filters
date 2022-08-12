@@ -21,39 +21,9 @@
     <ClCompile Include="MapReducer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="lib.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Mapper.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MapReduceInput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MapReduceOutput.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="MapReduceSpecification.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="MapReducer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="lib.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mapper.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MapReduceInput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MapReduceOutput.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MapReduceSpecification.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -1,2 +1,13 @@
-﻿  ParallelMapReducer.cpp
+﻿  MapReducer.cpp
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(39,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(40,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(58,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(59,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(84,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(85,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(114,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(85,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(85,38): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(111,24): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(214,47): warning C4267: '+=': conversion from 'size_t' to 'unsigned int', possible loss of data
   ParallelMapReducer.vcxproj -> C:\Users\GamingPC\source\repos\ParallelMapReducer\x64\Debug\ParallelMapReducer.exe

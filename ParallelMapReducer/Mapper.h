@@ -17,12 +17,14 @@ struct KeyValuePair {
 class Mapper
 {
 public:
-    Mapper(const unsigned&);
+    Mapper(const unsigned&, const unsigned&);
     unsigned int R;
-    std::vector<std::vector<KeyValuePair>> mappedKeyValues;
+    unsigned int numThread;
+    std::vector<std::vector<std::vector<KeyValuePair>>> mappedKeyValues;
     std::hash<std::string> hash_str;
 	virtual void Map(const std::string& line) = 0;
-    void Emit(const std::string&, const std::string&);
-    void print(std::ostream&) const;
+    virtual void Reduce(const std::string& line) = 0;
+    void Emit(const std::string&, const std::string&, const unsigned&);
+    void print(std::ostream&, const unsigned&) const;
 };
 
