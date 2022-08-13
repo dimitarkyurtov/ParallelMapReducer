@@ -72,6 +72,7 @@ struct KeyValuePair2 {
 
         key[kLength] = '\0';
         value[vLength] = '\0';
+        
     }
 
     KeyValuePair2& operator=(const KeyValuePair2& other)
@@ -81,6 +82,7 @@ struct KeyValuePair2 {
             delete[]key;
             delete[]value;
 
+            
             int kLength = strlen(other.key);
             int vLength = strlen(other.value);
 
@@ -105,8 +107,10 @@ struct KeyValuePair2 {
 
     ~KeyValuePair2()
     {
+        
         delete[]key;
         delete[]value;
+        
     }
 
     bool operator < (const KeyValuePair2& str) const
@@ -158,10 +162,10 @@ public:
     std::mutex mapQueueMutex;
     std::condition_variable cv;
     std::vector<std::vector<std::string>> mapTasks;
-    std::vector<std::vector<std::vector<KeyValuePair>>> mappedKeyValuesPerThread;
+    std::vector<std::vector<std::vector<KeyValuePair2*>>> mappedKeyValuesPerThread;
     std::vector<std::vector<KeyValuePair>> mappedKeyValuesFinalPerThread;
     void mapThread(int, std::queue<std::vector<std::string>>&);
-    void reduceThread(int);
+    //void reduceThread(int);
     int nextTask(const int &limit);
     void read();
 };

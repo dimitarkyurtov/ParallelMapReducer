@@ -3,26 +3,23 @@ C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(40,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(58,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(59,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(84,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(85,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(114,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(85,38): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(85,38): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(111,24): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(214,47): warning C4267: '+=': conversion from 'size_t' to 'unsigned int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(86,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(87,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(118,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.cpp(185,47): warning C4267: '+=': conversion from 'size_t' to 'unsigned int', possible loss of data
   ParallelMapReducer.cpp
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(39,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(40,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(58,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(59,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(84,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(85,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(114,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(86,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(87,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\MapReducer.h(118,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\ParallelMapReducer.cpp(14,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
 C:\Users\GamingPC\source\repos\ParallelMapReducer\ParallelMapReducer\ParallelMapReducer.cpp(14,1): warning C4267: 'initializing': conversion from 'size_t' to 'const int', possible loss of data
   Generating code
-  3 of 732 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    3 functions had inline decision re-evaluated but remain unchanged
+  123 of 709 functions (17.3%) were compiled, the rest were copied from previous compilation.
+    114 functions were new in current compilation
+    28 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   ParallelMapReducer.vcxproj -> C:\Users\GamingPC\source\repos\ParallelMapReducer\x64\Release\ParallelMapReducer.exe

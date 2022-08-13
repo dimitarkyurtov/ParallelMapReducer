@@ -8,19 +8,14 @@
 using namespace std::chrono;
 
 MapReducer::MapReducer(const std::vector<std::string>& fileNames, const unsigned int& blockSize = l1_cache_size, const unsigned int& reduceTasks = 0, const int &nT = 1)
+    : fileNames(fileNames), sizePerBlock(blockSize), R(reduceTasks), numThreads(nT), hasMapWork(true), currentTask(0),
+    mappedKeyValuesFinalPerThread(std::vector<std::vector<KeyValuePair>>(this->numThreads)),
+    mappedKeyValuesPerThread(std::vector<std::vector<std::vector<KeyValuePair2*>>>(this->numThreads))
 {
-    this->fileNames = fileNames;
-    this->sizePerBlock = blockSize;
-    this->R = reduceTasks;
-    this->numThreads = nT;
-    this->mappedKeyValuesFinalPerThread = std::vector<std::vector<KeyValuePair>>(this->numThreads);
-    this->mappedKeyValuesPerThread = std::vector<std::vector<std::vector<KeyValuePair>>>(this->numThreads);
-    this->hasMapWork = true;
     for (size_t i = 0; i < this->numThreads; i++)
     {
-        this->mappedKeyValuesPerThread[i] = std::vector<std::vector<KeyValuePair>>(this->R);
+        this->mappedKeyValuesPerThread[i] = std::vector<std::vector<KeyValuePair2*>>(this->R);
     }
-    //this->mappedKeyValuesMutexes.reserve(numMutexes);
 }
 
 
@@ -30,7 +25,7 @@ void MapReducer::Emit(const std::string& key, const std::string& value, const in
     int reducerIdx = this->hash_str(key) % this->R;
     {
         //const std::lock_guard<std::mutex> lock(this->mappedKeyValuesMutexes[this->hash_mutex_addr(&this->mappedKeyValues[reducerIdx]) % numMutexes]);
-        this->mappedKeyValuesPerThread[threadIdx][reducerIdx].push_back(KeyValuePair(key, value));
+        this->mappedKeyValuesPerThread[threadIdx][reducerIdx].push_back(new KeyValuePair2(key, value));
     }
 }
 
@@ -44,8 +39,8 @@ void MapReducer::Emit2(const std::string& key, const std::string& value, const i
 
 void MapReducer::mapThread(int threadIdx, std::queue<std::vector<std::string>>& mapTaskQueue)
 {
-    std::vector<std::vector<KeyValuePair2>> mappedKeyValuesLocalPerThread;
-    mappedKeyValuesLocalPerThread = std::vector<std::vector<KeyValuePair2>>(this->R);
+    //std::vector<std::vector<KeyValuePair2>> mappedKeyValuesLocalPerThread;
+    //mappedKeyValuesLocalPerThread = std::vector<std::vector<KeyValuePair2>>(this->R);
     std::vector<std::string> currentTask;
     bool breaker = false;
     int iter = 1;
@@ -81,36 +76,11 @@ void MapReducer::mapThread(int threadIdx, std::queue<std::vector<std::string>>& 
 
         for (auto& line : currentTask)
         {
-            //this->mapFunction(line, threadIdx);
-            const int n = line.size();
-            for (int i = 0; i < n; ) {
-                // Skip past leading whitespace
-                while ((i < n) && isspace(line[i]))
-                    i++;
-                // Find word end
-                int start = i;
-                while ((i < n) && !isspace(line[i]))
-                    i++;
-                if (start < i)
-                {
-                    int reducerIdx = this->hash_str(line.substr(start, i - start)) % this->R;
-                    {
-                        //const std::lock_guard<std::mutex> lock(this->mappedKeyValuesMutexes[this->hash_mutex_addr(&this->mappedKeyValues[reducerIdx]) % numMutexes]);
-                        mappedKeyValuesLocalPerThread[reducerIdx].push_back(KeyValuePair2(line.substr(start, i - start), "1"));
-                    }
-                }
-                    //Emit(line.substr(start, i - start), "1", threadIdx);
-            }
+            this->mapFunction(line, threadIdx);
         }
         iter++;
     }
 
-    int size = 0;
-    for (auto& el : mappedKeyValuesLocalPerThread)
-    {
-        size += el.size();
-    }
-    std::cout << size;
     /*
     {
         std::lock_guard<std::mutex> writerLock(streamMutex);
@@ -119,6 +89,7 @@ void MapReducer::mapThread(int threadIdx, std::queue<std::vector<std::string>>& 
     */
 }
 
+/*
 void MapReducer::reduceThread(int threadIdx)
 {
     int currentTaskIdx = this->nextTask(this->R);           
@@ -132,12 +103,6 @@ void MapReducer::reduceThread(int threadIdx)
                 this->mappedKeyValuesPerThread[i][currentTaskIdx].begin(), 
                 this->mappedKeyValuesPerThread[i][currentTaskIdx].end());
         }
-        /*
-        for (auto task : currentTask)
-        {
-            std::cout << "key: " + task.first << " value: " + task.second << std::endl;
-        }
-        */
         std::sort(currentTask.begin(), currentTask.end());
 
        
@@ -183,11 +148,17 @@ void MapReducer::reduceThread(int threadIdx)
         //std::cout << currentTaskIdx << std::endl;
     }
 }
+*/
 
 void MapReducer::read()
 {
     std::queue<std::vector<std::string>> mapTaskQueue;
    
+
+    std::vector<std::thread> mapWorkers;
+    for (int c = 0; c < this->numThreads; c++) {
+        mapWorkers.push_back(std::thread([this, &mapTaskQueue, c] {this->mapThread(c, mapTaskQueue); }));
+    }
     
 
     unsigned int currentTaskSize = 0;
@@ -230,13 +201,6 @@ void MapReducer::read()
         this->hasMapWork = false;
     }
     this->cv.notify_all();
-
-
-
-    std::vector<std::thread> mapWorkers;
-    for (int c = 0; c < this->numThreads; c++) {
-        mapWorkers.push_back(std::thread([this, &mapTaskQueue, c] {this->mapThread(c, mapTaskQueue); }));
-    }
     
     for (int c = 0; c < this->numThreads; c++) {
         mapWorkers[c].join();

@@ -69,7 +69,8 @@ int main()
     */
     
     
-    WordCounter wc(mb_file, 1'000'000, 30, 1);
+    
+    WordCounter wc(mb_file, 1'000'000, 30, 2);
 
     auto start = high_resolution_clock::now();
     wc.parallelMapReduce();
